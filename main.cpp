@@ -7,4 +7,6 @@ int main(int argc, char **argv) {
     std::cerr << "Not enough arguments, Usage: ./cc filename\n";
   cc::Lexer lexer{std::string(argv[1])};
   lexer.printSource();
+  lexer.lex();
+  lexer.printTokens();
 }
