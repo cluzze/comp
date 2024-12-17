@@ -8,30 +8,35 @@ namespace cc {
   class Token {
   public:
     enum class Kind {
-      ID = 0,
-      I_CONST,
+      IDENTIFIER = 0,
+      INTEGER,
       IF,
       WHILE,
       PRINT,
       READ,
       EQ,
       LESS,
+      PLUS,
+      MINUS,
+      MUL,
+      DIV,
       GREATER,
-      S_COLON,
-      L_PAREN,
-      R_PAREN,
-      L_BRACE,
-      R_BRACE,
-      UNKNOWN
+      SEMICOLON,
+      LEFTPAREN,
+      RIGHTPAREN,
+      LEFTBRACE,
+      RIGHTBRACE,
+      UNKNOWN,
+      END
     };
   public:
-    Token(Kind k = Kind::UNKNOWN, int v = 0);
+    Token(Kind k = Kind::UNKNOWN, const std::string& v = 0);
 
     Kind getType() const;
     void print() const;
   private:
     Kind kind;
-    int value;
+    std::string value;
   };
 
   class Lexer {
@@ -43,10 +48,8 @@ namespace cc {
 
     std::vector<Token> lex();
   private:
-    void skipWhitespaces();
-    std::string readNextWord();
-    Token matchToken(const std::string& word);
-
+    Token nextToken();
+    bool skipSpace(char c);
   private:
     size_t lexPos = 0;
     size_t lineNum = 0, charNum = 0;

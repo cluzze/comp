@@ -4,17 +4,17 @@
 #include <iostream>
 
 namespace cc {
-  Token::Token(Kind k, int v) : kind(k), value(v) {}
+  Token::Token(Kind k, const std::string& v) : kind(k), value(v) {}
 
   Token::Kind Token::getType() const { return kind; }
 
   void Token::print() const {
     switch (kind) {
-    case Kind::ID:
-        std::cout << "ID\n";
+    case Kind::IDENTIFIER:
+        std::cout << "IDENTIFIER\n";
         break;
-    case Kind::I_CONST:
-        std::cout << "I_CONST, value: " << value << "\n";
+    case Kind::INTEGER:
+        std::cout << "INTEGER, value: " << value << "\n";
         break;
     case Kind::IF:
         std::cout << "IF\n";
@@ -31,31 +31,48 @@ namespace cc {
     case Kind::EQ:
         std::cout << "EQ\n";
         break;
+    case Kind::PLUS:
+        std::cout << "PLUS\n";
+        break;
+    case Kind::MINUS:
+        std::cout << "MINUS\n";
+        break;
+    case Kind::MUL:
+        std::cout << "MUL\n";
+        break;
+    case Kind::DIV:
+        std::cout << "DIV\n";
+        break;
     case Kind::LESS:
         std::cout << "LESS\n";
         break;
     case Kind::GREATER:
         std::cout << "GREATER\n";
         break;
-    case Kind::S_COLON:
-        std::cout << "S_COLON\n";
+    case Kind::SEMICOLON:
+        std::cout << "SEMICOLON\n";
         break;
-    case Kind::L_PAREN:
-        std::cout << "L_PAREN\n";
+    case Kind::LEFTPAREN:
+        std::cout << "LEFTPAREN\n";
         break;
-    case Kind::R_PAREN:
-        std::cout << "R_PAREN\n";
+    case Kind::RIGHTPAREN:
+        std::cout << "RIGHTPAREN\n";
         break;
-    case Kind::L_BRACE:
-        std::cout << "L_BRACE\n";
+    case Kind::LEFTBRACE:
+        std::cout << "LEFTBRACE\n";
         break;
-    case Kind::R_BRACE:
-        std::cout << "R_BRACE\n";
+    case Kind::RIGHTBRACE:
+        std::cout << "RIGHTBRACE\n";
         break;
     case Kind::UNKNOWN:
-    default:
         std::cout << "UNKNOWN\n";
         break;
+    case Kind::END:
+        std::cout << "END\n";
+        break;
+    default:
+        std::cerr << "Unexpected token type\n";
+        exit(1);
     }
   }
 
@@ -84,75 +101,113 @@ namespace cc {
     }
   }
 
-  void Lexer::skipWhitespaces() {
-    while (lexPos < sourceCode.size() && std::isspace(sourceCode[lexPos])) {
-      ++charNum;
-      if (sourceCode[lexPos] == '\n') {
-        ++lineNum;
-        charNum = 0;
+  bool Lexer::skipSpace(char c) {
+    if (!std::isspace(c))
+      return false;
+    lexPos++;
+    charNum++;
+    if (c == '\n') {
+      charNum = 0;
+      lineNum++;
+    }
+    return true;
+  }
+
+  static Token getKeywordOrIdentifier(const std::string& Id) {
+    if (Id == "if") return Token(Token::Kind::IF, Id);
+    if (Id == "while") return Token(Token::Kind::WHILE, Id);
+    if (Id == "print") return Token(Token::Kind::PRINT, Id);
+    return Token(Token::Kind::IDENTIFIER, Id);
+  }
+
+  Token Lexer::nextToken() {
+    while (lexPos < sourceCode.size()) {
+      char Cur = sourceCode[lexPos];
+      if (skipSpace(Cur))
+        continue;
+      if (std::isalpha(Cur)) {
+        std::string Id;
+        while (lexPos < sourceCode.size() && std::isalnum(sourceCode[lexPos]) || sourceCode[lexPos] == '_') {
+            Id += sourceCode[lexPos];
+            ++lexPos;
+        }
+        return getKeywordOrIdentifier(Id);
       }
-      ++lexPos;
+      if (std::isdigit(Cur)) {
+        std::string Id;
+        while (lexPos < sourceCode.size() && std::isdigit(sourceCode[lexPos])) {
+            Id += sourceCode[lexPos];
+            ++lexPos;
+        }
+        return Token(Token::Kind::INTEGER, Id);
+      }
+      switch (Cur) {
+        case '=':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::EQ, "=");
+        case '+':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::PLUS, "+");
+        case '-':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::MINUS, "-");
+        case '*':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::MUL, "*");
+        case '/':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::DIV, "/");
+        case ';':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::SEMICOLON, ";");
+        case '>':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::GREATER, ";");
+        case '<':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::LESS, ";");
+        case '(':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::LEFTPAREN, "(");
+        case ')':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::RIGHTPAREN, ")");
+        case '{':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::LEFTBRACE, "{");
+        case '}':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::RIGHTBRACE, "}");
+        case '?':
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::READ, "?");
+        default:
+          ++lexPos;
+          ++charNum;
+          return Token(Token::Kind::UNKNOWN, std::string{Cur});
+      }
     }
-  }
-
-  std::string Lexer::readNextWord() {
-    std::string nextWord;
-    while (lexPos < sourceCode.size() && !std::isspace(sourceCode[lexPos])) {
-      nextWord.push_back(sourceCode[lexPos]);
-      ++charNum;
-      ++lexPos;
-    }
-    return nextWord;
-  }
-
-  Token Lexer::matchToken(const std::string& word) {
-    if (word == "if")
-      return {Token::Kind::IF};
-    if (word == "while")
-      return {Token::Kind::WHILE};
-    if (word == "print")
-      return {Token::Kind::PRINT};
-    if (word == "?")
-      return {Token::Kind::READ};
-    if (word == "=")
-      return {Token::Kind::EQ};
-    if (word == "<")
-      return {Token::Kind::LESS};
-    if (word == ">")
-      return {Token::Kind::GREATER};
-    if (word == ";")
-      return {Token::Kind::S_COLON};
-    if (word == "(")
-      return {Token::Kind::L_PAREN};
-    if (word == ")")
-      return {Token::Kind::R_PAREN};
-    if (word == "{")
-      return {Token::Kind::L_BRACE};
-    if (word == "}")
-      return {Token::Kind::R_BRACE};
-
-    const std::regex decimalIConstRegex(R"([-+]?[0-9]+)");
-    const std::regex identifierRegex(R"(^[a-zA-Z_][a-zA-Z0-9_]*$)");
-    std::cout << "\n" << word << "\n";
-    if (std::regex_match(word, decimalIConstRegex))
-      return {Token::Kind::L_BRACE, std::stoi(word)};
-    if (std::regex_match(word, identifierRegex))
-      return {Token::Kind::ID};
-    return {Token::Kind::UNKNOWN};
+    return {Token::Kind::END, "\\0"};
   }
 
   std::vector<Token> Lexer::lex() {
-    skipWhitespaces();
-    while (lexPos < sourceCode.size() - 1) {
-      std::string nextWord = readNextWord();
-      Token tok = matchToken(nextWord);
-      if (tok.getType() == Token::Kind::UNKNOWN) {
-        std::cerr << "Unknown token: " << nextWord << " at: " 
-            << sourceFileName << ":" << lineNum << ":" << charNum << "\n";
-        exit(1);
-      }
+    Token tok(Token::Kind::UNKNOWN, "");
+    while (tok.getType() != Token::Kind::END) {
+      tok = nextToken();
       tokens.push_back(tok);
-      skipWhitespaces();
     }
     return tokens;
   }
