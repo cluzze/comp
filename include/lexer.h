@@ -7,7 +7,7 @@
 namespace cc {
   class Token {
   public:
-    enum class Kind {
+    enum class Type {
       IDENTIFIER = 0,
       INTEGER,
       IF,
@@ -30,21 +30,23 @@ namespace cc {
       END
     };
   public:
-    Token(Kind k = Kind::UNKNOWN, const std::string& v = 0);
+    Token(Type k = Type::UNKNOWN, const std::string& v = 0);
 
-    Kind getType() const;
+    Type getType() const;
+    std::string getValue() const;
     void print() const;
   private:
-    Kind kind;
+    Type type;
     std::string value;
   };
 
   class Lexer {
   public:
     Lexer(const std::string& filename);
+    Lexer(const std::string& s);
 
-    void printSource();
-    void printTokens();
+    void printSource() const;
+    void printTokens() const;
 
     std::vector<Token> lex();
   private:
@@ -52,7 +54,7 @@ namespace cc {
     bool skipSpace(char c);
   private:
     size_t lexPos = 0;
-    size_t lineNum = 0, charNum = 0;
+    size_t lineNum = 1, charNum = 1;
     std::string sourceFileName;
     std::vector<char> sourceCode{};
     std::vector<Token> tokens{};

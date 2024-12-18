@@ -4,74 +4,75 @@
 #include <iostream>
 
 namespace cc {
-  Token::Token(Kind k, const std::string& v) : kind(k), value(v) {}
+  Token::Token(Type k, const std::string& v) : type(k), value(v) {}
 
-  Token::Kind Token::getType() const { return kind; }
+  Token::Type Token::getType() const { return type; }
+  std::string Token::getValue() const { return value; }
 
   void Token::print() const {
-    switch (kind) {
-    case Kind::IDENTIFIER:
-        std::cout << "IDENTIFIER\n";
+    switch (type) {
+    case Type::IDENTIFIER:
+        std::cout << "IDENTIFIER";
         break;
-    case Kind::INTEGER:
-        std::cout << "INTEGER, value: " << value << "\n";
+    case Type::INTEGER:
+        std::cout << "INTEGER, value: " << value;
         break;
-    case Kind::IF:
-        std::cout << "IF\n";
+    case Type::IF:
+        std::cout << "IF";
         break;
-    case Kind::WHILE:
-        std::cout << "WHILE\n";
+    case Type::WHILE:
+        std::cout << "WHILE";
         break;
-    case Kind::PRINT:
-        std::cout << "PRINT\n";
+    case Type::PRINT:
+        std::cout << "PRINT";
         break;
-    case Kind::READ:
-        std::cout << "READ\n";
+    case Type::READ:
+        std::cout << "READ";
         break;
-    case Kind::EQ:
-        std::cout << "EQ\n";
+    case Type::EQ:
+        std::cout << "EQ";
         break;
-    case Kind::PLUS:
-        std::cout << "PLUS\n";
+    case Type::PLUS:
+        std::cout << "PLUS";
         break;
-    case Kind::MINUS:
-        std::cout << "MINUS\n";
+    case Type::MINUS:
+        std::cout << "MINUS";
         break;
-    case Kind::MUL:
-        std::cout << "MUL\n";
+    case Type::MUL:
+        std::cout << "MUL";
         break;
-    case Kind::DIV:
-        std::cout << "DIV\n";
+    case Type::DIV:
+        std::cout << "DIV";
         break;
-    case Kind::LESS:
-        std::cout << "LESS\n";
+    case Type::LESS:
+        std::cout << "LESS";
         break;
-    case Kind::GREATER:
-        std::cout << "GREATER\n";
+    case Type::GREATER:
+        std::cout << "GREATER";
         break;
-    case Kind::SEMICOLON:
-        std::cout << "SEMICOLON\n";
+    case Type::SEMICOLON:
+        std::cout << "SEMICOLON";
         break;
-    case Kind::LEFTPAREN:
-        std::cout << "LEFTPAREN\n";
+    case Type::LEFTPAREN:
+        std::cout << "LEFTPAREN";
         break;
-    case Kind::RIGHTPAREN:
-        std::cout << "RIGHTPAREN\n";
+    case Type::RIGHTPAREN:
+        std::cout << "RIGHTPAREN";
         break;
-    case Kind::LEFTBRACE:
-        std::cout << "LEFTBRACE\n";
+    case Type::LEFTBRACE:
+        std::cout << "LEFTBRACE";
         break;
-    case Kind::RIGHTBRACE:
-        std::cout << "RIGHTBRACE\n";
+    case Type::RIGHTBRACE:
+        std::cout << "RIGHTBRACE";
         break;
-    case Kind::UNKNOWN:
-        std::cout << "UNKNOWN\n";
+    case Type::UNKNOWN:
+        std::cout << "UNKNOWN";
         break;
-    case Kind::END:
-        std::cout << "END\n";
+    case Type::END:
+        std::cout << "END";
         break;
     default:
-        std::cerr << "Unexpected token type\n";
+        std::cerr << "Error: Unexpected token type";
         exit(1);
     }
   }
@@ -79,7 +80,7 @@ namespace cc {
   Lexer::Lexer(const std::string& filename) : sourceFileName(filename) {
     std::ifstream sourceFile(filename);
     if (!sourceFile) {
-      std::cerr << "File: " << filename << "not found\n";
+      std::cerr << "Error: File: " << filename << "not found\n";
       exit(1);
     }
     sourceFile.seekg(0, std::ios::end);
@@ -90,14 +91,15 @@ namespace cc {
     sourceFile.close();
   }
 
-  void Lexer::printSource() {
+  void Lexer::printSource() const {
     for (const char& c : sourceCode)
       std::cout << c;
   }
 
-  void Lexer::printTokens() {
+  void Lexer::printTokens() const {
     for (const Token& tok : tokens) {
       tok.print();
+      std::cout << " ";
     }
   }
 
@@ -107,17 +109,17 @@ namespace cc {
     lexPos++;
     charNum++;
     if (c == '\n') {
-      charNum = 0;
+      charNum = 1;
       lineNum++;
     }
     return true;
   }
 
   static Token getKeywordOrIdentifier(const std::string& Id) {
-    if (Id == "if") return Token(Token::Kind::IF, Id);
-    if (Id == "while") return Token(Token::Kind::WHILE, Id);
-    if (Id == "print") return Token(Token::Kind::PRINT, Id);
-    return Token(Token::Kind::IDENTIFIER, Id);
+    if (Id == "if") return Token(Token::Type::IF, Id);
+    if (Id == "while") return Token(Token::Type::WHILE, Id);
+    if (Id == "print") return Token(Token::Type::PRINT, Id);
+    return Token(Token::Type::IDENTIFIER, Id);
   }
 
   Token Lexer::nextToken() {
@@ -139,74 +141,78 @@ namespace cc {
             Id += sourceCode[lexPos];
             ++lexPos;
         }
-        return Token(Token::Kind::INTEGER, Id);
+        return Token(Token::Type::INTEGER, Id);
       }
       switch (Cur) {
         case '=':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::EQ, "=");
+          return Token(Token::Type::EQ, "=");
         case '+':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::PLUS, "+");
+          return Token(Token::Type::PLUS, "+");
         case '-':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::MINUS, "-");
+          return Token(Token::Type::MINUS, "-");
         case '*':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::MUL, "*");
+          return Token(Token::Type::MUL, "*");
         case '/':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::DIV, "/");
+          return Token(Token::Type::DIV, "/");
         case ';':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::SEMICOLON, ";");
+          return Token(Token::Type::SEMICOLON, ";");
         case '>':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::GREATER, ";");
+          return Token(Token::Type::GREATER, ";");
         case '<':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::LESS, ";");
+          return Token(Token::Type::LESS, ";");
         case '(':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::LEFTPAREN, "(");
+          return Token(Token::Type::LEFTPAREN, "(");
         case ')':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::RIGHTPAREN, ")");
+          return Token(Token::Type::RIGHTPAREN, ")");
         case '{':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::LEFTBRACE, "{");
+          return Token(Token::Type::LEFTBRACE, "{");
         case '}':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::RIGHTBRACE, "}");
+          return Token(Token::Type::RIGHTBRACE, "}");
         case '?':
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::READ, "?");
+          return Token(Token::Type::READ, "?");
         default:
           ++lexPos;
           ++charNum;
-          return Token(Token::Kind::UNKNOWN, std::string{Cur});
+          return Token(Token::Type::UNKNOWN, std::string{Cur});
       }
     }
-    return {Token::Kind::END, "\\0"};
+    return {Token::Type::END, ""};
   }
 
   std::vector<Token> Lexer::lex() {
-    Token tok(Token::Kind::UNKNOWN, "");
-    while (tok.getType() != Token::Kind::END) {
+    Token tok(Token::Type::UNKNOWN, "");
+    while (tok.getType() != Token::Type::END) {
       tok = nextToken();
+      if (tok.getType() == Token::Type::UNKNOWN) {
+        std::cerr << "Error: Unknown: '" << tok.getValue() << "' at:" << sourceFileName << ":" << lineNum << ":" << charNum << "\n";
+        exit(1);
+      }
       tokens.push_back(tok);
     }
     return tokens;
